@@ -8,7 +8,7 @@ import {
 export class PrismaAirsApi implements ICredentialType {
   name = 'prismaAirsApi';
   displayName = 'Prisma AIRS API';
-  documentationUrl = 'https://pan.dev/ai-runtime-security/';
+  documentationUrl = 'https://pan.dev/airs/';
   properties: INodeProperties[] = [
     {
       displayName: 'API Key',
