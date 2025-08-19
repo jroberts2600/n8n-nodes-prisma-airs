@@ -40,12 +40,13 @@ export class PrismaAirsApi implements ICredentialType {
       description: 'The region where your Prisma AIRS instance is deployed',
     },
     {
-      displayName: 'AI Profile Name',
+      displayName: 'AI Profile',
       name: 'aiProfileName',
       type: 'string',
       default: '',
       required: true,
-      description: 'The name of your AI security profile configured in Prisma AIRS',
+      placeholder: 'e.g. production-profile or 03b32734-d06d-4bb7-a8df-ac5147630ce8',
+      description: 'The AI security profile to use for scans. Accepts profile name or UUID.',
     },
   ];
 
@@ -87,9 +88,9 @@ export class PrismaAirsApi implements ICredentialType {
         properties: {
           message: 'Credential test successful',
           key: 'action',
-          value: 'allow',
+          value: undefined,
         },
       },
-    ],
+    ] as any,
   };
 }

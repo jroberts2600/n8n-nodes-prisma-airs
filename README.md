@@ -4,7 +4,11 @@ A production-ready n8n community node for integrating with Palo Alto Networks Pr
 
 ## Features
 
-- **Multiple Scan Operations**: Prompt scanning, response scanning, and dual scanning
+- **Multiple Scan Operations**: Prompt scanning, response scanning, dual scanning, batch scanning, and data masking
+- **Batch Processing**: Scan up to 5 items in a single operation for efficiency
+- **Data Masking**: Automatically detect and mask sensitive data in content
+- **Contextual Grounding**: Validate AI responses against provided context (up to 100K characters)
+- **Dynamic Profile Selection**: Override security profiles per scan using profile name or UUID
 - **Sync & Async Support**: Both synchronous (2MB limit) and asynchronous (5MB limit) scanning
 - **Regional Support**: US and EU API endpoints
 - **Production-Ready**: Comprehensive error handling, retry logic, and timeout management
@@ -16,38 +20,45 @@ A production-ready n8n community node for integrating with Palo Alto Networks Pr
 ### Prerequisites
 
 - n8n instance (version 1.0+)
-- Prisma AIRS API access
-- Node.js 18.10+
+- Prisma AIRS API access with valid API key
+- Access to Strata Cloud Manager to configure AI security profiles
 
-### Local Development Installation
+### For End Users
 
+#### Option 1: Install via n8n Community Nodes (Recommended)
+1. Open your n8n instance
+2. Go to **Settings** → **Community Nodes**
+3. Search for `n8n-nodes-prisma-airs`
+4. Click **Install**
+5. Restart n8n
+
+#### Option 2: Install via npm
+```bash
+npm install n8n-nodes-prisma-airs
+```
+
+### For Developers & Testing
+
+#### Local Development Setup
 1. **Clone and Build**
    ```bash
-   git clone <your-private-repo>
-   cd prisma-airs-api-n8n-node
+   git clone https://github.com/jroberts2600/n8n-nodes-prisma-airs.git
+   cd n8n-nodes-prisma-airs
    npm install
    npm run build
    ```
 
 2. **Link to n8n**
    ```bash
-   # Create a symlink in your n8n custom nodes directory
+   # For local n8n installation
    ln -s $(pwd) ~/.n8n/custom/n8n-nodes-prisma-airs
    
-   # Or if using Docker n8n:
-   # Mount this directory to /home/node/.n8n/custom/n8n-nodes-prisma-airs
+   # For Docker n8n - add volume mount:
+   # -v /path/to/n8n-nodes-prisma-airs:/home/node/.n8n/custom/n8n-nodes-prisma-airs
    ```
 
 3. **Restart n8n**
    - Restart your n8n instance to load the new node
-
-### Production Installation (Future)
-
-Once ready for publication:
-
-```bash
-npm install n8n-nodes-prisma-airs
-```
 
 ## Configuration
 
@@ -70,7 +81,9 @@ In your n8n instance:
 3. Select the operation:
    - **Prompt Scan**: Scan user input for threats
    - **Response Scan**: Scan AI responses for violations
-   - **Dual Scan**: Scan both prompt and response
+   - **Dual Scan**: Scan both prompt and response with optional context
+   - **Batch Scan**: Process multiple items (up to 5) in parallel
+   - **Mask Data**: Scan and automatically mask sensitive data
 
 ## Usage Examples
 
@@ -98,14 +111,78 @@ In your n8n instance:
 }
 ```
 
-### Dual Scanning Workflow
+### Dual Scanning with Context
 
 ```json
 {
   "operation": "dualScan",
   "scanMode": "sync",
   "promptContent": "{{$json.userInput}}",
-  "responseContent": "{{$json.aiResponse}}"
+  "responseContent": "{{$json.aiResponse}}",
+  "context": "{{$json.contextDocument}}"
+}
+```
+
+### Batch Scanning Multiple Items
+
+```json
+{
+  "operation": "batchScan",
+  "scanMode": "async",
+  "batchItems": {
+    "items": [
+      {
+        "itemType": "prompt",
+        "promptContent": "First prompt to scan"
+      },
+      {
+        "itemType": "response",
+        "responseContent": "AI generated response"
+      },
+      {
+        "itemType": "both",
+        "promptContent": "User question",
+        "responseContent": "AI answer"
+      }
+    ]
+  }
+}
+```
+
+### Data Masking for Sensitive Content
+
+```json
+{
+  "operation": "maskData",
+  "scanMode": "sync",
+  "maskContent": "My credit card is 4111-1111-1111-1111",
+  "maskCharacter": "*"
+}
+```
+
+### Dynamic Profile Override
+
+```json
+{
+  "operation": "promptScan",
+  "scanMode": "sync",
+  "content": "{{$json.userInput}}",
+  "additionalOptions": {
+    "aiProfileOverride": "strict-production-profile"
+  }
+}
+```
+
+Or using a profile UUID:
+
+```json
+{
+  "operation": "promptScan",
+  "scanMode": "sync",
+  "content": "{{$json.userInput}}",
+  "additionalOptions": {
+    "aiProfileOverride": "03b32734-d06d-4bb7-a8df-ac5147630ce8"
+  }
 }
 ```
 
@@ -138,9 +215,13 @@ In your n8n instance:
 - **Content**: Text to scan (for single operations)
 - **Prompt Content**: Prompt text (for dual scan)
 - **Response Content**: Response text (for dual scan)
+- **Batch Items**: Array of items (for batch scan)
+- **Mask Content**: Content to mask (for mask data operation)
 
 ### Optional Parameters
 
+- **Context**: Grounding context for dual scan (up to 100K characters)
+- **AI Profile Override**: Override default profile (name or UUID)
 - **Transaction ID**: Custom tracking identifier
 - **AI Model**: Model identifier for metadata
 - **Application Name**: Source application name
@@ -149,6 +230,7 @@ In your n8n instance:
 - **Max Retries**: Retry attempts (default: 3)
 - **Polling Interval**: Async polling frequency (default: 2000ms)
 - **Max Polling Duration**: Async timeout (default: 300000ms)
+- **Mask Character**: Character for masking sensitive data (default: '*')
 
 ## Error Handling
 
@@ -218,7 +300,7 @@ npm run dev
 
 For issues and questions:
 
-1. Check the [troubleshooting guide](https://pan.dev/ai-runtime-security/)
+1. Check the [troubleshooting guide](https://pan.dev/prisma-airs/scan/api/)
 2. Review n8n community node documentation
 3. Contact your Prisma AIRS administrator
 
@@ -228,12 +310,13 @@ MIT License - See LICENSE file for details
 
 ## Contributing
 
-This is a private repository. For internal development:
+Contributions are welcome! To contribute:
 
-1. Create feature branches
-2. Test thoroughly with real API
-3. Submit pull requests for review
-4. Ensure all tests pass before merging
+1. Fork the repository
+2. Create feature branches from `main`
+3. Test thoroughly with real Prisma AIRS API
+4. Submit pull requests for review
+5. Ensure all tests and linting pass before merging
 
 ## Changelog
 

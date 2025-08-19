@@ -12,14 +12,14 @@
     "ai-runtime-security"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/your-org/n8n-nodes-prisma-airs",
+  "homepage": "https://github.com/jroberts2600/n8n-nodes-prisma-airs",
   "author": {
-    "name": "Security Engineering Team",
-    "email": "security@yourcompany.com"
+    "name": "AI Partner Engineering",
+    "email": "jrockstl@gmail.com"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-org/n8n-nodes-prisma-airs.git"
+    "url": "git+https://github.com/jroberts2600/n8n-nodes-prisma-airs.git"
   },
   "engines": {
     "node": ">=18.10",
@@ -50,10 +50,7 @@
       "dist/nodes/PrismaAirs/PrismaAirs.node.js"
     ]
   },
-  "dependencies": {
-    "@types/uuid": "^9.0.8",
-    "uuid": "^9.0.1"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@types/node": "^18.19.119",

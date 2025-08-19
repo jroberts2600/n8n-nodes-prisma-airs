@@ -35,14 +35,10 @@ bower_components
 build/Release
 
 # Dependency directories
-node_modules/
 jspm_packages/
 
 # TypeScript v1 declaration files
 typings/
-
-# TypeScript cache
-*.tsbuildinfo
 
 # Optional npm cache directory
 .npm
@@ -147,6 +143,11 @@ config/local.json
 secrets.json
 
 # docker
-.yml
-docker-compose.yml
+docker-compose*.yml
 PRISMA_AIRS_N8N_COMMUNITY_NODE_PRD.md
+specs/api-gaps-analysis.md
+specs/feature-enhancements.md
+specs/use-case-mapping.md
+
+# specs
+specs/
