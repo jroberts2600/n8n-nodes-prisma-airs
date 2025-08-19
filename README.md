@@ -28,7 +28,7 @@ A production-ready n8n community node for integrating with Palo Alto Networks Pr
 #### Option 1: Install via n8n Community Nodes (Recommended)
 1. Open your n8n instance
 2. Go to **Settings** → **Community Nodes**
-3. Search for `n8n-nodes-prisma-airs`
+3. Search for `prisma airs`
 4. Click **Install**
 5. Restart n8n
 
