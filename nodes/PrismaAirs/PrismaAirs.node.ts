@@ -11,9 +11,9 @@ import {
   ICredentialDataDecryptedObject,
   ApplicationError,
   NodeConnectionType,
+  sleep,
+  randomString,
 } from 'n8n-workflow';
-
-import { randomUUID } from 'node:crypto';
 
 interface PrismaAirsCredentials extends ICredentialDataDecryptedObject {
   apiKey: string;
@@ -126,13 +126,13 @@ class PrismaAirsScanner {
         }
         
         // Wait before next poll
-        await new Promise(resolve => setTimeout(resolve, pollingInterval));
+        await sleep(pollingInterval);
       } catch (error) {
         const code = (error as any).httpCode as number | string | undefined;
         const is404 = typeof code === 'number' ? code === 404 : String(code) === '404';
         if (is404) {
           // Scan not ready yet, continue polling
-          await new Promise(resolve => setTimeout(resolve, pollingInterval));
+          await sleep(pollingInterval);
           continue;
         }
         throw error;
@@ -262,7 +262,7 @@ class PrismaAirsScanner {
         if (attempt < maxRetries) {
           // Exponential backoff: wait 2^attempt seconds
           const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await sleep(delay);
         }
       }
     }
@@ -620,7 +620,7 @@ export class PrismaAirs implements INodeType {
         const scanMode = this.getNodeParameter('scanMode', i) as string;
         const additionalOptions = this.getNodeParameter('additionalOptions', i, {}) as IDataObject;
 
-        const transactionId = (additionalOptions.transactionId as string) || `n8n-${randomUUID()}`;
+        const transactionId = (additionalOptions.transactionId as string) || `n8n-${randomString(16)}-${Date.now()}`;
         const aiModel = (additionalOptions.aiModel as string) || 'n8n-integration';
         const applicationName = (additionalOptions.applicationName as string) || 'n8n-workflow';
         const userId = (additionalOptions.userId as string) || 'n8n-user';

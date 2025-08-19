@@ -34,7 +34,7 @@ A production-ready n8n community node for integrating with Palo Alto Networks Pr
 
 #### Option 2: Install via npm
 ```bash
-npm install n8n-nodes-prisma-airs
+npm install @paloaltonetworks/n8n-nodes-prisma-airs
 ```
 
 ### For Developers & Testing
