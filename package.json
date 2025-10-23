@@ -1,6 +1,6 @@
 {
   "name": "@paloaltonetworks/n8n-nodes-prisma-airs",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "n8n community node for Prisma AIRS (AI Runtime Security) API integration",
   "keywords": [
     "n8n-community-node-package",
