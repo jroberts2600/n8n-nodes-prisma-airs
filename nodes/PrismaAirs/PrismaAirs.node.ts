@@ -18,6 +18,7 @@ import {
 interface PrismaAirsCredentials extends ICredentialDataDecryptedObject {
   apiKey: string;
   region: string;
+  customBaseUrl?: string;
   aiProfileName: string;
 }
 
@@ -272,10 +273,18 @@ class PrismaAirsScanner {
 }
 
 export class PrismaAirs implements INodeType {
-  private static getBaseURL(region: string): string {
+  private static getBaseURL(region: string, customBaseUrl?: string): string {
+    if (region === 'custom') {
+      if (!customBaseUrl || customBaseUrl.trim() === '') {
+        throw new ApplicationError('Custom base URL is required when region is set to "custom"');
+      }
+      // Remove trailing slash if present
+      return customBaseUrl.replace(/\/$/, '');
+    }
     if (region === 'eu') return 'https://service-de.api.aisecurity.paloaltonetworks.com';
     if (region === 'us') return 'https://service.api.aisecurity.paloaltonetworks.com';
-    throw new ApplicationError(`Unknown region "${region}". Expected "us" or "eu".`);
+    if (region === 'in') return 'https://service-in.api.aisecurity.paloaltonetworks.com';
+    throw new ApplicationError(`Unknown region "${region}". Expected "us", "eu", "in", or "custom".`);
   }
 
   private static isUUID(value: string): boolean {
@@ -289,6 +298,7 @@ export class PrismaAirs implements INodeType {
     }
     return { profile_name: profileValue };
   }
+
   description: INodeTypeDescription = {
     displayName: 'Prisma AIRS',
     name: 'prismaAirs',
@@ -551,6 +561,14 @@ export class PrismaAirs implements INodeType {
             description: 'Application name for audit trails',
           },
           {
+            displayName: 'Environment',
+            name: 'environment',
+            type: 'string',
+            default: '',
+            placeholder: 'e.g., production, staging, development',
+            description: 'Environment identifier for attribution and tracking (optional)',
+          },
+          {
             displayName: 'Max Polling Duration (Ms)',
             name: 'maxPollingDuration',
             type: 'number',
@@ -612,7 +630,7 @@ export class PrismaAirs implements INodeType {
     const returnData: INodeExecutionData[] = [];
     const credentials = (await this.getCredentials('prismaAirsApi')) as PrismaAirsCredentials;
 
-    const baseUrl = PrismaAirs.getBaseURL(credentials.region);
+    const baseUrl = PrismaAirs.getBaseURL(credentials.region, credentials.customBaseUrl);
 
     for (let i = 0; i < items.length; i++) {
       try {
@@ -620,15 +638,29 @@ export class PrismaAirs implements INodeType {
         const scanMode = this.getNodeParameter('scanMode', i) as string;
         const additionalOptions = this.getNodeParameter('additionalOptions', i, {}) as IDataObject;
 
+        const workflow = this.getWorkflow();
+        const context = {
+          workflowName: workflow?.name || '',
+          workflowId: workflow?.id || '',
+          executionId: this.getExecutionId() || '',
+          executionMode: this.getMode() || '',
+        };
+
         const transactionId = (additionalOptions.transactionId as string) || `n8n-${randomString(16)}-${Date.now()}`;
         const aiModel = (additionalOptions.aiModel as string) || 'n8n-integration';
         const applicationName = (additionalOptions.applicationName as string) || 'n8n-workflow';
         const userId = (additionalOptions.userId as string) || 'n8n-user';
+        const environment = (additionalOptions.environment as string) || '';
         const timeout = (additionalOptions.timeout as number) || 30000;
         const rawMaxRetries = (additionalOptions.maxRetries as number) || 3;
         const maxRetries = Math.min(rawMaxRetries, 6);
         const aiProfileOverride = (additionalOptions.aiProfileOverride as string) || '';
         const profileToUse = aiProfileOverride || credentials.aiProfileName;
+
+        const workflowId = context.workflowId;
+        const workflowName = context.workflowName;
+        const executionId = context.executionId;
+        const executionMode = context.executionMode;
 
         let scanContent: ScanContent;
         let scanResult: ScanResponse | AsyncScanResponse;
@@ -716,6 +748,11 @@ export class PrismaAirs implements INodeType {
                   batchIndex: index,
                   transactionId: `${transactionId}-batch-${index}`,
                   ...result,
+                  ...(workflowId && { workflowId }),
+                  ...(workflowName && { workflowName }),
+                  ...(executionId && { executionId }),
+                  ...(executionMode && { executionMode }),
+                  ...(environment && { environment }),
                   timestamp: new Date().toISOString(),
                 },
                 pairedItem: { item: i },
@@ -767,6 +804,11 @@ export class PrismaAirs implements INodeType {
                   'DLP detected but no masked content returned. Profile may not have masking enabled.' : 
                   undefined,
                 ...maskResult,
+                ...(workflowId && { workflowId }),
+                ...(workflowName && { workflowName }),
+                ...(executionId && { executionId }),
+                ...(executionMode && { executionMode }),
+                ...(environment && { environment }),
                 timestamp: new Date().toISOString(),
               },
               pairedItem: { item: i },
@@ -806,6 +848,11 @@ export class PrismaAirs implements INodeType {
           scanMode,
           transactionId,
           ...scanResult,
+          ...(workflowId && { workflowId }),
+          ...(workflowName && { workflowName }),
+          ...(executionId && { executionId }),
+          ...(executionMode && { executionMode }),
+          ...(environment && { environment }),
           timestamp: new Date().toISOString(),
         };
 

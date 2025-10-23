@@ -34,10 +34,32 @@ export class PrismaAirsApi implements ICredentialType {
           name: 'EU (Germany)',
           value: 'eu',
         },
+        {
+          name: 'India',
+          value: 'in',
+        },
+        {
+          name: 'Custom',
+          value: 'custom',
+        },
       ],
       default: 'us',
       required: true,
       description: 'The region where your Prisma AIRS instance is deployed',
+    },
+    {
+      displayName: 'Custom Base URL',
+      name: 'customBaseUrl',
+      type: 'string',
+      default: '',
+      required: true,
+      placeholder: 'https://service-custom.api.aisecurity.paloaltonetworks.com',
+      description: 'Custom base URL for Prisma AIRS API (only used when Region is set to Custom)',
+      displayOptions: {
+        show: {
+          region: ['custom'],
+        },
+      },
     },
     {
       displayName: 'AI Profile',
@@ -62,7 +84,7 @@ export class PrismaAirsApi implements ICredentialType {
 
   test: ICredentialTestRequest = {
     request: {
-      baseURL: '={{$credentials.region === "eu" ? "https://service-de.api.aisecurity.paloaltonetworks.com" : "https://service.api.aisecurity.paloaltonetworks.com"}}',
+      baseURL: '={{$credentials.region === "custom" ? $credentials.customBaseUrl : $credentials.region === "eu" ? "https://service-de.api.aisecurity.paloaltonetworks.com" : $credentials.region === "in" ? "https://service-in.api.aisecurity.paloaltonetworks.com" : "https://service.api.aisecurity.paloaltonetworks.com"}}',
       url: '/v1/scan/sync/request',
       method: 'POST',
       body: {
@@ -84,13 +106,12 @@ export class PrismaAirsApi implements ICredentialType {
     },
     rules: [
       {
-        type: 'responseSuccessBody',
+        type: 'responseCode',
         properties: {
           message: 'Credential test successful',
-          key: 'action',
-          value: undefined,
+          value: 200,
         },
       },
-    ] as any,
+    ],
   };
 }

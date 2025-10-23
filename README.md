@@ -10,7 +10,8 @@ A production-ready n8n community node for integrating with Palo Alto Networks Pr
 - **Contextual Grounding**: Validate AI responses against provided context (up to 100K characters)
 - **Dynamic Profile Selection**: Override security profiles per scan using profile name or UUID
 - **Sync & Async Support**: Both synchronous (2MB limit) and asynchronous (5MB limit) scanning
-- **Regional Support**: US and EU API endpoints
+- **Regional Support**: US, EU (Germany), India, and Custom region endpoints
+- **Attribution Metadata**: Automatic n8n workflow context (workflowId, workflowName, executionId, executionMode) 
 - **Production-Ready**: Comprehensive error handling, retry logic, and timeout management
 - **Security-First**: Secure credential storage and API key management
 - **Real-time Monitoring**: Async scan polling with exponential backoff
@@ -71,8 +72,9 @@ In your n8n instance:
 3. Search for "Prisma AIRS API"
 4. Fill in:
    - **API Key**: Your Prisma AIRS API key (x-pan-token)
-   - **Region**: US or EU (Germany)
-   - **AI Profile Name**: Your configured AI security profile name
+   - **Region**: US, EU (Germany), India, or Custom
+   - **Custom Base URL**: (Only if Custom region selected) Your custom Prisma AIRS endpoint
+   - **AI Profile Name**: Your configured AI security profile name (supports both names and UUIDs)
 
 ### 2. Add Node to Workflow
 
@@ -155,8 +157,7 @@ In your n8n instance:
 {
   "operation": "maskData",
   "scanMode": "sync",
-  "maskContent": "My credit card is 4111-1111-1111-1111",
-  "maskCharacter": "*"
+  "maskContent": "My credit card is 4111-1111-1111-1111"
 }
 ```
 
@@ -200,13 +201,34 @@ Or using a profile UUID:
   "blocked": false,
   "violations": [],
   "metadata": {
-    "scan_time": "2025-01-15T10:30:00Z",
+    "scan_time": "2025-10-21T10:30:00Z",
     "ai_model": "gpt-4",
     "profile": "production-security-profile"
   },
-  "timestamp": "2025-01-15T10:30:00Z"
+  "workflowId": "rKU3xnZb5S1ayJCG",
+  "workflowName": "Customer Support Bot",
+  "executionId": "385",
+  "executionMode": "manual",
+  "environment": "production",
+  "timestamp": "2025-10-21T10:30:00Z"
 }
 ```
+
+### Attribution Metadata
+
+The node automatically enriches all outputs with n8n workflow context for enhanced attribution and tracking:
+
+- **workflowId**: Unique identifier for the workflow
+- **workflowName**: Human-readable workflow name
+- **executionId**: Unique ID for this specific execution
+- **executionMode**: How the workflow was triggered (`manual`, `webhook`, `trigger`, `cli`)
+- **environment**: Optional environment identifier (if configured)
+
+This metadata is ideal for:
+- **AI Gateway Integration**: Pass to upstream services 
+- **Cost Attribution**: Track usage by workflow or execution
+- **Audit Trails**: Correlate security scans with workflow runs
+- **Multi-tenant Tracking**: Identify which workflows generated requests
 
 ## Configuration Options
 
@@ -223,14 +245,16 @@ Or using a profile UUID:
 - **Context**: Grounding context for dual scan (up to 100K characters)
 - **AI Profile Override**: Override default profile (name or UUID)
 - **Transaction ID**: Custom tracking identifier
-- **AI Model**: Model identifier for metadata
-- **Application Name**: Source application name
-- **User ID**: End user identifier
+- **AI Model**: Model identifier for metadata (default: 'n8n-integration')
+- **Application Name**: Source application name (default: 'n8n-workflow')
+- **User ID**: End user identifier (default: 'n8n-user')
+- **Environment**: Optional environment tag for output tracking (e.g., 'production', 'staging', 'development')
+  - Note: This field is for workflow-level tracking only and appears in the output
+  - The actual environment used by Prisma AIRS is configured in Strata Cloud Manager at the application level
 - **Timeout**: Request timeout (default: 30000ms)
-- **Max Retries**: Retry attempts (default: 3)
-- **Polling Interval**: Async polling frequency (default: 2000ms)
+- **Max Retries**: Retry attempts (default: 3, max: 6)
+- **Polling Interval**: Async polling frequency (default: 2000ms, min: 1000ms)
 - **Max Polling Duration**: Async timeout (default: 300000ms)
-- **Mask Character**: Character for masking sensitive data (default: '*')
 
 ## Error Handling
 
@@ -257,16 +281,7 @@ npm test
 3. Test all operations (sync/async, prompt/response/dual)
 4. Validate error scenarios
 
-### Live Testing Checklist
 
-- [ ] Credential validation works
-- [ ] Prompt scanning detects threats
-- [ ] Response scanning identifies violations
-- [ ] Dual scanning processes both contents
-- [ ] Async scanning completes successfully
-- [ ] Error handling works correctly
-- [ ] Timeout mechanisms function properly
-- [ ] Retry logic operates as expected
 
 ## Development
 
@@ -320,10 +335,21 @@ Contributions are welcome! To contribute:
 
 ## Changelog
 
+### Version 0.2.0
+- **New**: Automatic attribution metadata (workflowId, workflowName, executionId, executionMode) in all outputs
+- **New**: Custom region support for future Prisma AIRS deployments
+- **New**: Optional environment tag field for workflow-level tracking in outputs
+- **New**: India region support
+- **Fixed**: Better handling of UUID vs profile name in credentials
+- Fully backward compatible with v0.1.x
+
+### Version 0.1.1
+- Bug fixes and stability improvements
+
 ### Version 0.1.0
 - Initial implementation
 - All core features implemented
 - Production-ready with comprehensive error handling
 - Support for sync/async operations
-- Regional endpoint support
+- Regional endpoint support (US, EU)
 - Full TypeScript implementation
