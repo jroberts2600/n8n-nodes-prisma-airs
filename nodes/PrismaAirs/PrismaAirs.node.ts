@@ -30,14 +30,14 @@ interface ScanContent {
 
 interface ScanRequest {
   tr_id: string;
-  ai_profile: {
+  ai_profile?: {
     profile_name?: string;
     profile_id?: string;
   };
   metadata: {
+    app_name: string;
     app_user: string;
     ai_model: string;
-    application_name: string;
   };
   contents: ScanContent[];
 }
@@ -292,7 +292,10 @@ export class PrismaAirs implements INodeType {
     return uuidRegex.test(value);
   }
 
-  private static createProfileObject(profileValue: string): { profile_name?: string; profile_id?: string } {
+  private static createProfileObject(profileValue: string): { profile_name?: string; profile_id?: string } | undefined {
+    if (!profileValue || profileValue.trim() === '') {
+      return undefined;
+    }
     if (this.isUUID(profileValue)) {
       return { profile_id: profileValue };
     }
@@ -648,7 +651,8 @@ export class PrismaAirs implements INodeType {
 
         const transactionId = (additionalOptions.transactionId as string) || `n8n-${randomString(16)}-${Date.now()}`;
         const aiModel = (additionalOptions.aiModel as string) || 'n8n-integration';
-        const applicationName = (additionalOptions.applicationName as string) || 'n8n-workflow';
+        const userAppName = (additionalOptions.applicationName as string) || '';
+        const applicationName = userAppName ? `n8n-${userAppName}` : 'n8n';
         const userId = (additionalOptions.userId as string) || 'n8n-user';
         const environment = (additionalOptions.environment as string) || '';
         const timeout = (additionalOptions.timeout as number) || 30000;
@@ -714,13 +718,14 @@ export class PrismaAirs implements INodeType {
               const contentSize = (itemContent.prompt || '') + (itemContent.response || '');
               PrismaAirs.validateContentSize(contentSize, scanMode);
               
+              const profileObj = PrismaAirs.createProfileObject(profileToUse);
               return {
                 tr_id: `${transactionId}-batch-${index}`,
-                ai_profile: PrismaAirs.createProfileObject(profileToUse),
+                ...(profileObj && { ai_profile: profileObj }),
                 metadata: {
+                  app_name: applicationName,
                   app_user: userId,
                   ai_model: aiModel,
-                  application_name: applicationName,
                 },
                 contents: [itemContent],
               };
@@ -766,13 +771,14 @@ export class PrismaAirs implements INodeType {
             PrismaAirs.validateContentSize(maskContent, scanMode);
             
             // Prepare scan request for masking
+            const profileObj = PrismaAirs.createProfileObject(profileToUse);
             const maskScanRequest: ScanRequest = {
               tr_id: transactionId,
-              ai_profile: PrismaAirs.createProfileObject(profileToUse),
+              ...(profileObj && { ai_profile: profileObj }),
               metadata: {
+                app_name: applicationName,
                 app_user: userId,
                 ai_model: aiModel,
-                application_name: applicationName,
               },
               contents: [{ response: maskContent }], // Treat as response for DLP detection
             };
@@ -821,13 +827,14 @@ export class PrismaAirs implements INodeType {
         }
 
         // Prepare scan request
+        const profileObj = PrismaAirs.createProfileObject(profileToUse);
         const scanRequest: ScanRequest = {
           tr_id: transactionId,
-          ai_profile: PrismaAirs.createProfileObject(profileToUse),
+          ...(profileObj && { ai_profile: profileObj }),
           metadata: {
+            app_name: applicationName,
             app_user: userId,
             ai_model: aiModel,
-            application_name: applicationName,
           },
           contents: [scanContent],
         };

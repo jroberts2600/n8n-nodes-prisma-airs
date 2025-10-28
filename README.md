@@ -11,6 +11,7 @@ A production-ready n8n community node for integrating with Palo Alto Networks Pr
 - **Dynamic Profile Selection**: Override security profiles per scan using profile name or UUID
 - **Sync & Async Support**: Both synchronous (2MB limit) and asynchronous (5MB limit) scanning
 - **Regional Support**: US, EU (Germany), India, and Custom region endpoints
+- **Flexible Profile Management**: Use API key with linked profile or specify profile name/UUID
 - **Attribution Metadata**: Automatic n8n workflow context (workflowId, workflowName, executionId, executionMode) 
 - **Production-Ready**: Comprehensive error handling, retry logic, and timeout management
 - **Security-First**: Secure credential storage and API key management
@@ -74,7 +75,7 @@ In your n8n instance:
    - **API Key**: Your Prisma AIRS API key (x-pan-token)
    - **Region**: US, EU (Germany), India, or Custom
    - **Custom Base URL**: (Only if Custom region selected) Your custom Prisma AIRS endpoint
-   - **AI Profile Name**: Your configured AI security profile name (supports both names and UUIDs)
+   - **AI Profile Name**: (Optional) Your configured AI security profile name or UUID. Leave empty to use the profile linked to your API key
 
 ### 2. Add Node to Workflow
 
@@ -246,7 +247,7 @@ This metadata is ideal for:
 - **AI Profile Override**: Override default profile (name or UUID)
 - **Transaction ID**: Custom tracking identifier
 - **AI Model**: Model identifier for metadata (default: 'n8n-integration')
-- **Application Name**: Source application name (default: 'n8n-workflow')
+- **Application Name**: Source application name. Defaults to 'n8n'. If you provide a custom name (e.g., 'testapp'), it will be formatted as 'n8n-testapp'
 - **User ID**: End user identifier (default: 'n8n-user')
 - **Environment**: Optional environment tag for output tracking (e.g., 'production', 'staging', 'development')
   - Note: This field is for workflow-level tracking only and appears in the output
@@ -334,6 +335,11 @@ Contributions are welcome! To contribute:
 5. Ensure all tests and linting pass before merging
 
 ## Changelog
+
+### Version 0.2.1 (Upcoming)
+- **New**: AI Profile is now optional - use API key with linked profile or specify profile name/UUID
+- **New**: Smart application name formatting - defaults to 'n8n', custom names are prefixed (e.g., 'testapp' → 'n8n-testapp')
+- Credential test now validates API key connectivity without requiring profile specification
 
 ### Version 0.2.0
 - **New**: Automatic attribution metadata (workflowId, workflowName, executionId, executionMode) in all outputs

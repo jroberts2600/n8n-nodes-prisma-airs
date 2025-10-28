@@ -66,9 +66,8 @@ export class PrismaAirsApi implements ICredentialType {
       name: 'aiProfileName',
       type: 'string',
       default: '',
-      required: true,
       placeholder: 'e.g. production-profile or 03b32734-d06d-4bb7-a8df-ac5147630ce8',
-      description: 'The AI security profile to use for scans. Accepts profile name or UUID.',
+      description: 'Optional: The AI security profile to use for scans. Accepts profile name or UUID. If omitted, uses the profile linked to your API key.',
     },
   ];
 
@@ -87,22 +86,7 @@ export class PrismaAirsApi implements ICredentialType {
       baseURL: '={{$credentials.region === "custom" ? $credentials.customBaseUrl : $credentials.region === "eu" ? "https://service-de.api.aisecurity.paloaltonetworks.com" : $credentials.region === "in" ? "https://service-in.api.aisecurity.paloaltonetworks.com" : "https://service.api.aisecurity.paloaltonetworks.com"}}',
       url: '/v1/scan/sync/request',
       method: 'POST',
-      body: {
-        tr_id: 'n8n-credential-test',
-        ai_profile: {
-          profile_name: '={{$credentials.aiProfileName}}',
-        },
-        metadata: {
-          app_user: 'n8n-test',
-          ai_model: 'test',
-          application_name: 'n8n-credential-test',
-        },
-        contents: [
-          {
-            prompt: 'Hello, this is a test prompt to verify API credentials.',
-          },
-        ],
-      },
+      body: '={{ $credentials.aiProfileName ? { "tr_id": "n8n-credential-test", "ai_profile": /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test($credentials.aiProfileName) ? { "profile_id": $credentials.aiProfileName } : { "profile_name": $credentials.aiProfileName }, "metadata": { "app_name": "n8n-credential-test", "app_user": "n8n-test", "ai_model": "test" }, "contents": [{ "prompt": "Hello, this is a test prompt to verify API credentials." }] } : { "tr_id": "n8n-credential-test", "metadata": { "app_name": "n8n-credential-test", "app_user": "n8n-test", "ai_model": "test" }, "contents": [{ "prompt": "Hello, this is a test prompt to verify API credentials." }] } }}',
     },
     rules: [
       {
