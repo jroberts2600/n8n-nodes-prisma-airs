@@ -12,14 +12,14 @@
     "ai-runtime-security"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/jroberts2600/n8n-nodes-prisma-airs",
+  "homepage": "https://github.com/PaloAltoNetworks/n8n-nodes-prisma-airs",
   "author": {
     "name": "AI Partner Engineering",
     "email": "jrockstl@gmail.com"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jroberts2600/n8n-nodes-prisma-airs.git"
+    "url": "git+https://github.com/PaloAltoNetworks/n8n-nodes-prisma-airs.git"
   },
   "engines": {
     "node": ">=18.10",

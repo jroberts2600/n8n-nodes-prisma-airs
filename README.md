@@ -44,7 +44,7 @@ npm install @paloaltonetworks/n8n-nodes-prisma-airs
 #### Local Development Setup
 1. **Clone and Build**
    ```bash
-   git clone https://github.com/jroberts2600/n8n-nodes-prisma-airs.git
+   git clone https://github.com/PaloAltoNetworks/n8n-nodes-prisma-airs.git
    cd n8n-nodes-prisma-airs
    npm install
    npm run build
